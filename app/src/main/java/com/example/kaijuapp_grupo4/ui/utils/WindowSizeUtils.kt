@@ -1,7 +1,6 @@
 package com.example.kaijuapp_grupo4.ui.theme
 
 import androidx.activity.compose.LocalActivity
-import androidx.annotation.experimental.Experimental
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
