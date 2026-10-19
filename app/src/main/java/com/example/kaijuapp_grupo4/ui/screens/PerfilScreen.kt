@@ -37,10 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.ui.components.ImagenInteligente
 import com.example.kaijuapp_grupo4.viewmodel.MainViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,10 +54,39 @@ fun PerfilScreen(
     var modoAlertasActivo by remember { mutableStateOf(false) }
     var mostrarMensajeConfirmacion by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         imageUri = uri
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            val file = File(context.cacheDir, "camara_${System.currentTimeMillis()}.jpg")
+            file.outputStream().use { out ->
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, out)
+            }
+            imageUri = Uri.fromFile(file)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            try {
+                cameraLauncher.launch(null)
+            } catch (_: Exception) {
+                android.widget.Toast.makeText(context, "Cámara no disponible. Abriendo galería...", android.widget.Toast.LENGTH_SHORT).show()
+                galleryLauncher.launch("image/*")
+            }
+        } else {
+            android.widget.Toast.makeText(context, "Permiso de cámara denegado", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     val colorBotonAnimado by animateColorAsState(
@@ -96,6 +127,29 @@ fun PerfilScreen(
                     Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     Text("Galería")
+                }
+                OutlinedButton(onClick = {
+                    if (android.os.Build.FINGERPRINT.startsWith("generic")
+                        || android.os.Build.MODEL.contains("google_sdk")
+                        || android.os.Build.MODEL.contains("Emulator")
+                        || android.os.Build.MODEL.contains("Android SDK built for x86")
+                        || android.os.Build.HARDWARE.contains("goldfish")
+                        || android.os.Build.HARDWARE.contains("ranchu")
+                        || android.os.Build.PRODUCT.contains("sdk")) {
+                        android.widget.Toast.makeText(context, "El emulador no soporta cámara. Abriendo galería...", android.widget.Toast.LENGTH_SHORT).show()
+                        galleryLauncher.launch("image/*")
+                    } else {
+                        try {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        } catch (_: Exception) {
+                            android.widget.Toast.makeText(context, "Cámara no disponible. Abriendo galería...", android.widget.Toast.LENGTH_SHORT).show()
+                            galleryLauncher.launch("image/*")
+                        }
+                    }
+                }) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Cámara")
                 }
             }
 

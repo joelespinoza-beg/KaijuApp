@@ -1,6 +1,14 @@
 package com.example.kaijuapp_grupo4.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -99,46 +107,86 @@ fun ItemProductoCard(producto: Producto) {
             }
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = producto.nombre,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    if (esStockBajo) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Stock Bajo",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = " Stock Bajo",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = producto.nombre,
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Categoría: ${producto.categoria}",
+                    style = MaterialTheme.typography.bodySmall
                 )
-                if (esStockBajo) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Precio: $${producto.precio}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Disponible: ${producto.cantidadDisponible} unidades",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (esStockBajo) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Slot para la miniatura de la foto del producto al costado
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!producto.imagenUri.isNullOrBlank()) {
+                    AsyncImage(
+                        model = producto.imagenUri,
+                        contentDescription = "Miniatura producto",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Stock Bajo",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            text = " Stock Bajo",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.labelMedium
+                            imageVector = Icons.Default.Image,
+                            contentDescription = "Sin foto",
+                            tint = MaterialTheme.colorScheme.outline
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Categoría: ${producto.categoria}",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                text = "Precio: $${producto.precio}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Disponible: ${producto.cantidadDisponible} unidades",
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (esStockBajo) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-            )
         }
     }
 }

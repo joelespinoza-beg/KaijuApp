@@ -1,5 +1,6 @@
 package com.example.kaijuapp_grupo4.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.model.ProductoErrores
@@ -38,6 +39,10 @@ class InventarioViewModel : ViewModel() {
         _formState.update { it.copy(cantidad = valor, errores = it.errores.copy(cantidad = null)) }
     }
 
+    fun onImagenChange(uri: Uri?) {
+        _formState.update { it.copy(imagenUri = uri) }
+    }
+
     fun validarFormulario(): Boolean {
         val estadoActual = _formState.value
         val errores = ProductoErrores(
@@ -56,7 +61,8 @@ class InventarioViewModel : ViewModel() {
                 categoria = estadoActual.categoria.ifBlank { "General" },
                 precio = estadoActual.precio.toDoubleOrNull() ?: 0.0,
                 cantidadDisponible = estadoActual.cantidad.toIntOrNull() ?: 0,
-                stockMinimo = estadoActual.stockMinimo.toIntOrNull() ?: 5
+                stockMinimo = estadoActual.stockMinimo.toIntOrNull() ?: 5,
+                imagenUri = estadoActual.imagenUri?.toString()
             )
             _productos.update { list -> list + nuevoProducto }
             _formState.value = ProductoFormState()
