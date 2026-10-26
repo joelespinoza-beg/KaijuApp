@@ -24,19 +24,19 @@ class InventarioViewModel : ViewModel() {
     val formState: StateFlow<ProductoFormState> = _formState
 
     fun onNombreChange(valor: String) {
-        _formState.update { it.copy(nombre = valor, errores = it.errores.copy(nombre = null)) }
+        _formState.update { it.copy(nombre = valor.replace("\n", ""), errores = it.errores.copy(nombre = null)) }
     }
 
     fun onCategoriaChange(valor: String) {
-        _formState.update { it.copy(categoria = valor) }
+        _formState.update { it.copy(categoria = valor.replace("\n", "")) }
     }
 
     fun onPrecioChange(valor: String) {
-        _formState.update { it.copy(precio = valor, errores = it.errores.copy(precio = null)) }
+        _formState.update { it.copy(precio = valor.replace("\n", ""), errores = it.errores.copy(precio = null)) }
     }
 
     fun onCantidadChange(valor: String) {
-        _formState.update { it.copy(cantidad = valor, errores = it.errores.copy(cantidad = null)) }
+        _formState.update { it.copy(cantidad = valor.replace("\n", ""), errores = it.errores.copy(cantidad = null)) }
     }
 
     fun onImagenChange(uri: Uri?) {

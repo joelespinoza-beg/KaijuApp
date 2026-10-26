@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -116,7 +117,6 @@ fun FormularioProductoScreen(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            // Previsualización de la foto del producto
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -144,7 +144,6 @@ fun FormularioProductoScreen(
                 }
             }
 
-            // Botones para elegir Galería o Cámara
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -172,8 +171,12 @@ fun FormularioProductoScreen(
             OutlinedTextField(
                 value = formState.nombre,
                 onValueChange = inventarioViewModel::onNombreChange,
-                label = { Text("Nombre del Producto") },
+                label = { Text("Nombre del Producto *") },
+                singleLine = true,
                 isError = formState.errores.nombre != null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    errorContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                ),
                 supportingText = {
                     formState.errores.nombre?.let {
                         Text(text = it, color = MaterialTheme.colorScheme.error)
@@ -185,16 +188,21 @@ fun FormularioProductoScreen(
             OutlinedTextField(
                 value = formState.categoria,
                 onValueChange = inventarioViewModel::onCategoriaChange,
-                label = { Text("Categoría (ej. Ropa, Coleccionables, Accesorios)") },
+                label = { Text("Categoría (Opcional)") },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = formState.precio,
                 onValueChange = inventarioViewModel::onPrecioChange,
-                label = { Text("Precio ($)") },
+                label = { Text("Precio ($) *") },
+                singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = formState.errores.precio != null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    errorContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                ),
                 supportingText = {
                     formState.errores.precio?.let {
                         Text(text = it, color = MaterialTheme.colorScheme.error)
@@ -206,9 +214,13 @@ fun FormularioProductoScreen(
             OutlinedTextField(
                 value = formState.cantidad,
                 onValueChange = inventarioViewModel::onCantidadChange,
-                label = { Text("Cantidad Inicial en Stock") },
+                label = { Text("Cantidad Inicial en Stock *") },
+                singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = formState.errores.cantidad != null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    errorContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                ),
                 supportingText = {
                     formState.errores.cantidad?.let {
                         Text(text = it, color = MaterialTheme.colorScheme.error)
