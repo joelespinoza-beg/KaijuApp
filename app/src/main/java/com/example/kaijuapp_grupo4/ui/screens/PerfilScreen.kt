@@ -1,8 +1,5 @@
 package com.example.kaijuapp_grupo4.ui.screens
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -30,70 +27,48 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.ui.components.ImagenInteligente
-import com.example.kaijuapp_grupo4.viewmodel.MainViewModel
-import java.io.File
+import com.example.kaijuapp_grupo4.ui.components.rememberSelectorImagen
+import com.example.kaijuapp_grupo4.ui.theme.VerdeExito
+import com.example.kaijuapp_grupo4.viewmodel.PerfilViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilScreen(
     navController: NavController,
-    mainViewModel: MainViewModel
+    perfilViewModel: PerfilViewModel
 ) {
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var modoAlertasActivo by remember { mutableStateOf(false) }
-    var mostrarMensajeConfirmacion by remember { mutableStateOf(false) }
+    val fotoPerfil by perfilViewModel.fotoPerfil.collectAsState()
+    val alertasActivas by perfilViewModel.alertasActivas.collectAsState()
+    var mostrarMensaje by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imageUri = uri
+    val selectorImagen = rememberSelectorImagen(prefijoArchivo = "perfil") { uri ->
+        perfilViewModel.guardarFoto(uri)
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        if (bitmap != null) {
-            val file = File(context.cacheDir, "camara_${System.currentTimeMillis()}.jpg")
-            file.outputStream().use { out ->
-                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, out)
-            }
-            imageUri = Uri.fromFile(file)
-        }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            try {
-                cameraLauncher.launch(null)
-            } catch (_: Exception) {
-                android.widget.Toast.makeText(context, "Cámara no disponible. Abriendo galería...", android.widget.Toast.LENGTH_SHORT).show()
-                galleryLauncher.launch("image/*")
-            }
-        } else {
-            android.widget.Toast.makeText(context, "Permiso de cámara denegado", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    val colorBotonAnimado by animateColorAsState(
-        targetValue = if (modoAlertasActivo) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
+    val colorBoton by animateColorAsState(
+        targetValue = if (alertasActivas) VerdeExito else MaterialTheme.colorScheme.primary,
         animationSpec = tween(durationMillis = 500),
-        label = "colorAnim"
+        label = "colorAlertas"
     )
+
+    LaunchedEffect(mostrarMensaje) {
+        if (mostrarMensaje) {
+            delay(2000)
+            mostrarMensaje = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -115,7 +90,7 @@ fun PerfilScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ImagenInteligente(imageUri = imageUri)
+            ImagenInteligente(imageUri = fotoPerfil)
 
             Text(
                 text = "Administrador Kaiju",
@@ -123,30 +98,12 @@ fun PerfilScreen(
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                OutlinedButton(onClick = selectorImagen.abrirGaleria) {
                     Icon(Icons.Default.PhotoLibrary, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     Text("Galería")
                 }
-                OutlinedButton(onClick = {
-                    if (android.os.Build.FINGERPRINT.startsWith("generic")
-                        || android.os.Build.MODEL.contains("google_sdk")
-                        || android.os.Build.MODEL.contains("Emulator")
-                        || android.os.Build.MODEL.contains("Android SDK built for x86")
-                        || android.os.Build.HARDWARE.contains("goldfish")
-                        || android.os.Build.HARDWARE.contains("ranchu")
-                        || android.os.Build.PRODUCT.contains("sdk")) {
-                        android.widget.Toast.makeText(context, "El emulador no soporta cámara. Abriendo galería...", android.widget.Toast.LENGTH_SHORT).show()
-                        galleryLauncher.launch("image/*")
-                    } else {
-                        try {
-                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                        } catch (_: Exception) {
-                            android.widget.Toast.makeText(context, "Cámara no disponible. Abriendo galería...", android.widget.Toast.LENGTH_SHORT).show()
-                            galleryLauncher.launch("image/*")
-                        }
-                    }
-                }) {
+                OutlinedButton(onClick = selectorImagen.abrirCamara) {
                     Icon(Icons.Default.CameraAlt, contentDescription = null)
                     Spacer(Modifier.width(4.dp))
                     Text("Cámara")
@@ -157,22 +114,23 @@ fun PerfilScreen(
 
             Button(
                 onClick = {
-                    modoAlertasActivo = !modoAlertasActivo
-                    mostrarMensajeConfirmacion = true
+                    perfilViewModel.alternarAlertas()
+                    mostrarMensaje = true
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = colorBotonAnimado),
+                colors = ButtonDefaults.buttonColors(containerColor = colorBoton),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (modoAlertasActivo) "Alertas de Stock: ACTIVADAS" else "Activar Alertas de Stock")
+                Text(if (alertasActivas) "Alertas de Stock: ACTIVADAS" else "Activar Alertas de Stock")
             }
 
-            AnimatedVisibility(visible = mostrarMensajeConfirmacion) {
+            AnimatedVisibility(visible = mostrarMensaje) {
                 Text(
                     text = "¡Preferencia guardada exitosamente!",
-                    color = Color(0xFF4CAF50),
+                    color = VerdeExito,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
         }
     }
 }
+

@@ -2,14 +2,15 @@ package com.example.kaijuapp_grupo4.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -24,10 +25,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -35,17 +38,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.navigation.Screen
-import com.example.kaijuapp_grupo4.viewmodel.MainViewModel
+import com.example.kaijuapp_grupo4.ui.theme.obtenerWindowSizeClass
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    navController: NavController,
-    mainViewModel: MainViewModel
-) {
+fun HomeScreen(navController: NavController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val esCompacto = obtenerWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact
+
+    val opcionesMenu = listOf(
+        Triple(Icons.AutoMirrored.Filled.List, "Inventario de Productos", Screen.Inventario),
+        Triple(Icons.Default.Add, "Registrar Producto", Screen.FormularioProducto),
+        Triple(Icons.Default.ShoppingCart, "Registrar Venta", Screen.ResumenVenta),
+        Triple(Icons.Default.Person, "Perfil de Usuario / Ajustes", Screen.Perfil)
+    )
+
+    val accionesPrincipales = listOf(
+        "Ver Inventario" to Screen.Inventario,
+        "Registrar Nuevo Producto" to Screen.FormularioProducto,
+        "Registrar Venta" to Screen.ResumenVenta
+    )
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -56,42 +70,18 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = "Inventario") },
-                    label = { Text("Inventario de Productos") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Screen.Inventario.route)
-                    }
-                )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Nuevo Producto") },
-                    label = { Text("Registrar Producto") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Screen.FormularioProducto.route)
-                    }
-                )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Ventas") },
-                    label = { Text("Registrar Venta") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Screen.ResumenVenta.route)
-                    }
-                )
-                NavigationDrawerItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil de Usuario / Ajustes") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        navController.navigate(Screen.Perfil.route)
-                    }
-                )
+                opcionesMenu.forEach { (icono, etiqueta, destino) ->
+                    NavigationDrawerItem(
+                        icon = { Icon(icono, contentDescription = etiqueta) },
+                        label = { Text(etiqueta) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            navController.navigate(destino.route)
+                        },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
+                }
             }
         }
     ) {
@@ -135,27 +125,32 @@ fun HomeScreen(
                     }
                 }
 
-                Button(
-                    onClick = { navController.navigate(Screen.Inventario.route) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Ver Inventario")
-                }
-
-                Button(
-                    onClick = { navController.navigate(Screen.FormularioProducto.route) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Registrar Nuevo Producto")
-                }
-
-                Button(
-                    onClick = { navController.navigate(Screen.ResumenVenta.route) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Registrar Venta")
+                if (esCompacto) {
+                    accionesPrincipales.forEach { (texto, destino) ->
+                        Button(
+                            onClick = { navController.navigate(destino.route) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(texto)
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        accionesPrincipales.forEach { (texto, destino) ->
+                            Button(
+                                onClick = { navController.navigate(destino.route) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(texto)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
+

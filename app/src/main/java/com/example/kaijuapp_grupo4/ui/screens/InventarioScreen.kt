@@ -1,15 +1,9 @@
 package com.example.kaijuapp_grupo4.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,11 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,15 +32,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.navigation.Screen
+import com.example.kaijuapp_grupo4.ui.components.formatearPrecio
+import com.example.kaijuapp_grupo4.ui.theme.obtenerWindowSizeClass
 import com.example.kaijuapp_grupo4.viewmodel.InventarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +58,7 @@ fun InventarioScreen(
     inventarioViewModel: InventarioViewModel
 ) {
     val productos by inventarioViewModel.productos.collectAsState()
+    val columnas = if (obtenerWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) 1 else 2
 
     Scaffold(
         topBar = {
@@ -83,11 +91,29 @@ fun InventarioScreen(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(productos) { producto ->
-                    ItemProductoCard(producto = producto)
+            if (productos.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Aún no hay productos registrados.\nPresiona + para agregar el primero.",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(columnas),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(productos, key = { it.id }) { producto ->
+                        ItemProductoCard(
+                            producto = producto,
+                            modifier = Modifier.animateItem()
+                        )
+                    }
                 }
             }
         }
@@ -95,18 +121,22 @@ fun InventarioScreen(
 }
 
 @Composable
-fun ItemProductoCard(producto: Producto) {
+fun ItemProductoCard(producto: Producto, modifier: Modifier = Modifier) {
     val esStockBajo = producto.cantidadDisponible <= producto.stockMinimo
 
+    val colorFondo by animateColorAsState(
+        targetValue = if (esStockBajo) {
+            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        },
+        animationSpec = tween(durationMillis = 400),
+        label = "colorStock"
+    )
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (esStockBajo) {
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            }
-        )
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colorFondo)
     ) {
         Row(
             modifier = Modifier
@@ -147,7 +177,7 @@ fun ItemProductoCard(producto: Producto) {
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "Precio: $${producto.precio}",
+                    text = "Precio: ${formatearPrecio(producto.precio)}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -159,7 +189,6 @@ fun ItemProductoCard(producto: Producto) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Slot para la miniatura de la foto del producto al costado
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -174,20 +203,14 @@ fun ItemProductoCard(producto: Producto) {
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Image,
-                            contentDescription = "Sin foto",
-                            tint = MaterialTheme.colorScheme.outline
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Sin foto",
+                        tint = MaterialTheme.colorScheme.outline
+                    )
                 }
             }
         }
     }
 }
+

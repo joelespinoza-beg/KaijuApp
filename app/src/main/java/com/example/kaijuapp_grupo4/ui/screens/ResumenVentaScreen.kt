@@ -1,5 +1,7 @@
 package com.example.kaijuapp_grupo4.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,12 +37,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.navigation.Screen
+import com.example.kaijuapp_grupo4.ui.components.formatearPrecio
+import com.example.kaijuapp_grupo4.ui.theme.VerdeExito
 import com.example.kaijuapp_grupo4.viewmodel.InventarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,15 +52,17 @@ fun ResumenVentaScreen(
     inventarioViewModel: InventarioViewModel
 ) {
     val productos by inventarioViewModel.productos.collectAsState()
-
-    var productoSeleccionado by remember { mutableStateOf<Producto?>(null) }
-    var cantidadTexto by remember { mutableStateOf("1") }
+    val ventaState by inventarioViewModel.ventaState.collectAsState()
     var expanded by remember { mutableStateOf(false) }
-    var errorMensaje by remember { mutableStateOf<String?>(null) }
-    var ventaExitosa by remember { mutableStateOf(false) }
 
-    val cantidadInt = cantidadTexto.toIntOrNull() ?: 0
-    val totalVenta = (productoSeleccionado?.precio ?: 0.0) * cantidadInt
+    // El producto se busca por id en la lista actual, asi siempre muestra el stock real
+    val productoSeleccionado = productos.find { it.id == ventaState.productoId }
+    val cantidad = ventaState.cantidad.toIntOrNull() ?: 0
+    val totalVenta = (productoSeleccionado?.precio ?: 0.0) * cantidad
+
+    DisposableEffect(Unit) {
+        onDispose { inventarioViewModel.reiniciarVenta() }
+    }
 
     Scaffold(
         topBar = {
@@ -105,10 +110,8 @@ fun ResumenVentaScreen(
                         DropdownMenuItem(
                             text = { Text("${producto.nombre} (Disp: ${producto.cantidadDisponible})") },
                             onClick = {
-                                productoSeleccionado = producto
+                                inventarioViewModel.seleccionarProductoVenta(producto.id)
                                 expanded = false
-                                errorMensaje = null
-                                ventaExitosa = false
                             }
                         )
                     }
@@ -116,20 +119,20 @@ fun ResumenVentaScreen(
             }
 
             OutlinedTextField(
-                value = cantidadTexto,
-                onValueChange = {
-                    cantidadTexto = it
-                    errorMensaje = null
-                    ventaExitosa = false
-                },
+                value = ventaState.cantidad,
+                onValueChange = inventarioViewModel::onCantidadVentaChange,
                 label = { Text("Cantidad a vender") },
+                singleLine = true,
+                isError = ventaState.error != null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
 
             productoSeleccionado?.let { prod ->
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -139,11 +142,11 @@ fun ResumenVentaScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "Producto: ${prod.nombre}")
-                        Text(text = "Precio Unitario: $${prod.precio}")
+                        Text(text = "Precio Unitario: ${formatearPrecio(prod.precio)}")
                         Text(text = "Stock Actual: ${prod.cantidadDisponible} unidades")
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Total a Cobrar: $$totalVenta",
+                            text = "Total a Cobrar: ${formatearPrecio(totalVenta)}",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -151,47 +154,30 @@ fun ResumenVentaScreen(
                 }
             }
 
-            errorMensaje?.let {
-                Text(text = it, color = MaterialTheme.colorScheme.error)
+            AnimatedVisibility(visible = ventaState.error != null) {
+                Text(
+                    text = ventaState.error ?: "",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
 
-            if (ventaExitosa) {
+            AnimatedVisibility(visible = ventaState.exito) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = Color(0xFF4CAF50)
+                        tint = VerdeExito
                     )
                     Text(
                         text = " ¡Venta realizada y stock actualizado!",
-                        color = Color(0xFF4CAF50),
+                        color = VerdeExito,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
 
             Button(
-                onClick = {
-                    val prod = productoSeleccionado
-                    if (prod == null) {
-                        errorMensaje = "Por favor seleccione un producto"
-                    } else if (cantidadInt <= 0) {
-                        errorMensaje = "Ingrese una cantidad válida mayor a 0"
-                    } else if (cantidadInt > prod.cantidadDisponible) {
-                        errorMensaje = "Stock insuficiente (Disponible: ${prod.cantidadDisponible})"
-                    } else {
-                        val exito = inventarioViewModel.registrarVenta(prod.id, cantidadInt)
-                        if (exito) {
-                            ventaExitosa = true
-                            errorMensaje = null
-                            productoSeleccionado = prod.copy(
-                                cantidadDisponible = prod.cantidadDisponible - cantidadInt
-                            )
-                        } else {
-                            errorMensaje = "Error al procesar la venta"
-                        }
-                    }
-                },
+                onClick = inventarioViewModel::confirmarVenta,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = productoSeleccionado != null
             ) {
@@ -207,3 +193,4 @@ fun ResumenVentaScreen(
         }
     }
 }
+

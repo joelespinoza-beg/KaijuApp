@@ -1,7 +1,11 @@
 package com.example.kaijuapp_grupo4.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "productos")
 data class Producto(
-    val id: String = "",
+    @PrimaryKey val id: String = "",
     val nombre: String = "",
     val categoria: String = "",
     val precio: Double = 0.0,
