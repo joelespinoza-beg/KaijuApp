@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,21 +47,41 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
     private val _mensajeSincronizacion = MutableStateFlow<String?>(null)
     val mensajeSincronizacion: StateFlow<String?> = _mensajeSincronizacion.asStateFlow()
 
-    init {
-        sincronizarConBackend()
-    }
+    val todosLosProductos: StateFlow<List<Producto>> = repository.productos
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val _tiemposSucursales = MutableStateFlow<Map<String, String>>(mapOf(
+    private val tiemposDefecto = mapOf(
         "san_bernardo" to "Hace 15 minutos",
         "central" to "Hace 1 hora",
         "norte" to "Hace 45 minutos",
         "maipu" to "Hace 2 días",
         "persa_biobio" to "Hace 35 días"
-    ))
+    )
+
+    private val _tiemposSucursales = MutableStateFlow<Map<String, String>>(tiemposDefecto)
     val tiemposSucursales: StateFlow<Map<String, String>> = _tiemposSucursales.asStateFlow()
 
+    init {
+        sincronizarConBackend()
+        cargarTiemposSucursales()
+    }
+
+    private fun cargarTiemposSucursales() {
+        viewModelScope.launch {
+            val mapa = mutableMapOf<String, String>()
+            tiemposDefecto.keys.forEach { id ->
+                val guardado = estadoDataStore.obtenerTiempoSucursal(id, tiemposDefecto[id]!!).first()
+                mapa[id] = guardado
+            }
+            _tiemposSucursales.value = mapa
+        }
+    }
+
     fun actualizarTiempoSucursal(sucursalId: String, nuevoTiempo: String) {
-        _tiemposSucursales.update { it + (sucursalId to nuevoTiempo) }
+        viewModelScope.launch {
+            estadoDataStore.guardarTiempoSucursal(sucursalId, nuevoTiempo)
+            _tiemposSucursales.update { it + (sucursalId to nuevoTiempo) }
+        }
     }
 
     fun sincronizarConBackend() {

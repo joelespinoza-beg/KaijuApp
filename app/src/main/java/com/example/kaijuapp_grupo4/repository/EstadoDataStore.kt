@@ -36,4 +36,16 @@ class EstadoDataStore(private val context: Context) {
 
     fun obtenerSucursalAfiliada(): Flow<String> =
         context.dataStore.data.map { prefs -> prefs[claveSucursalAfiliada] ?: "San Bernardo" }
+
+    suspend fun guardarTiempoSucursal(sucursalId: String, tiempo: String) {
+        context.dataStore.edit { prefs ->
+            prefs[stringPreferencesKey("tiempo_$sucursalId")] = tiempo
+        }
+    }
+
+    fun obtenerTiempoSucursal(sucursalId: String, porDefecto: String): Flow<String> {
+        return context.dataStore.data.map { prefs ->
+            prefs[stringPreferencesKey("tiempo_$sucursalId")] ?: porDefecto
+        }
+    }
 }
