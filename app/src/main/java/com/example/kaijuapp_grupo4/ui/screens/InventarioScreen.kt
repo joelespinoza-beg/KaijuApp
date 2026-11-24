@@ -45,6 +45,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.compose.material3.Button
+import androidx.compose.ui.text.font.FontWeight
 import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.navigation.Screen
 import com.example.kaijuapp_grupo4.ui.components.formatearPrecio
@@ -58,6 +60,8 @@ fun InventarioScreen(
     inventarioViewModel: InventarioViewModel
 ) {
     val productos by inventarioViewModel.productos.collectAsState()
+    val backendOnline by inventarioViewModel.backendOnline.collectAsState()
+    val mensajeSincronizacion by inventarioViewModel.mensajeSincronizacion.collectAsState()
     val columnas = if (obtenerWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) 1 else 2
 
     Scaffold(
@@ -85,6 +89,51 @@ fun InventarioScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (backendOnline) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (backendOnline) "Backend: Online / Sincronizado" else "Backend: Offline (Datos locales Room)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (!mensajeSincronizacion.isNullOrBlank()) {
+                                Text(
+                                    text = mensajeSincronizacion!!,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = { inventarioViewModel.sincronizarConBackend() }
+                        ) {
+                            Text("Actualizar (POST)")
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = { navController.navigate(Screen.InventarioExtra.route) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Text("Ver Inventario Multi-Sucursal (Extra)")
+            }
+
             Text(
                 text = "Productos en Stock (${productos.size}):",
                 style = MaterialTheme.typography.titleMedium,

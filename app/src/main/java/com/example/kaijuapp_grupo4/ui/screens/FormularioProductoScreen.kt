@@ -60,8 +60,6 @@ fun FormularioProductoScreen(
     inventarioViewModel: InventarioViewModel
 ) {
     val formState by inventarioViewModel.formState.collectAsState()
-    var expandedSucursal by remember { mutableStateOf(false) }
-    val listaSucursales = listOf("San Bernardo", "Central", "Norte", "Maipú", "Persa BioBío")
 
     val selectorImagen = rememberSelectorImagen(prefijoArchivo = "producto") { uri ->
         inventarioViewModel.onImagenChange(uri)
@@ -145,37 +143,7 @@ fun FormularioProductoScreen(
                 }
             }
 
-            // Desplegable Selector de Sucursal
-            ExposedDropdownMenuBox(
-                expanded = expandedSucursal,
-                onExpandedChange = { expandedSucursal = !expandedSucursal }
-            ) {
-                OutlinedTextField(
-                    value = "Sucursal: ${formState.sucursal}",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Sucursal del Producto *") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSucursal) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
 
-                ExposedDropdownMenu(
-                    expanded = expandedSucursal,
-                    onDismissRequest = { expandedSucursal = false }
-                ) {
-                    listaSucursales.forEach { sucursal ->
-                        DropdownMenuItem(
-                            text = { Text(sucursal) },
-                            onClick = {
-                                inventarioViewModel.onSucursalChange(sucursal)
-                                expandedSucursal = false
-                            }
-                        )
-                    }
-                }
-            }
 
             CampoFormulario(
                 valor = formState.nombre,

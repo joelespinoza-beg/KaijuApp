@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.kaijuapp_grupo4.model.Producto
 import com.example.kaijuapp_grupo4.model.Sucursal
@@ -56,10 +58,16 @@ import com.example.kaijuapp_grupo4.ui.theme.RojoSuaveFondo
 import com.example.kaijuapp_grupo4.ui.theme.RojoSuaveTexto
 import com.example.kaijuapp_grupo4.ui.theme.VerdeAzulado
 import com.example.kaijuapp_grupo4.ui.theme.VerdeVentas
+import com.example.kaijuapp_grupo4.viewmodel.InventarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InventarioExtraScreen(navController: NavController) {
+fun InventarioExtraScreen(
+    navController: NavController,
+    inventarioViewModel: InventarioViewModel = viewModel()
+) {
+    val productosLocales by inventarioViewModel.productos.collectAsState()
+    val backendOnline by inventarioViewModel.backendOnline.collectAsState()
 
     var sucursales by remember {
         mutableStateOf(
@@ -140,11 +148,26 @@ fun InventarioExtraScreen(navController: NavController) {
         )
     }
 
+    val sucursalesActualizadas = remember(sucursales, productosLocales) {
+        sucursales.map { suc ->
+            if (suc.id == "san_bernardo") {
+                val base = listOf(
+                    Producto("sb-1", "Polera Kaiju Godzilla", "Ropa", 15990.0, 15, 5, sucursal = "San Bernardo"),
+                    Producto("sb-2", "Figura Ghidorah Articulada", "Coleccionables", 34990.0, 4, 2, sucursal = "San Bernardo"),
+                    Producto("sb-3", "Manga Kaiju No. 8 Vol. 1", "Libros", 8990.0, 20, 5, sucursal = "San Bernardo")
+                )
+                suc.copy(productos = base + productosLocales)
+            } else {
+                suc
+            }
+        }
+    }
+
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var textoBusqueda by remember { mutableStateOf("") }
     var mensajeSincronizacion by remember { mutableStateOf(false) }
 
-    val sucursalActual = sucursales[selectedTabIndex]
+    val sucursalActual = sucursalesActualizadas[selectedTabIndex]
 
     val productosFiltrados = remember(sucursalActual, textoBusqueda) {
         if (textoBusqueda.isBlank()) {
@@ -230,6 +253,11 @@ fun InventarioExtraScreen(navController: NavController) {
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
+                                    text = if (backendOnline) "Backend: Online / Sincronizado" else "Backend: Offline (Datos locales Room)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (backendOnline) MaterialTheme.colorScheme.primary else RojoSuaveTexto
+                                )
+                                Text(
                                     text = sucursalActual.direccion,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -288,6 +316,7 @@ fun InventarioExtraScreen(navController: NavController) {
 
                         Button(
                             onClick = {
+                                inventarioViewModel.sincronizarConBackend()
                                 sucursales = sucursales.mapIndexed { idx, suc ->
                                     if (idx == selectedTabIndex) {
                                         suc.copy(
@@ -303,7 +332,7 @@ fun InventarioExtraScreen(navController: NavController) {
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(Modifier.width(6.dp))
-                            Text("Actualizar ahora")
+                            Text("Actualizar ahora (Sincronizar y POST)")
                         }
 
                         AnimatedVisibility(visible = mensajeSincronizacion) {

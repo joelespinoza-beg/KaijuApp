@@ -9,7 +9,6 @@ data class ProductoFormState(
     val cantidad: String = "",
     val stockMinimo: String = "5",
     val imagenUri: Uri? = null,
-    val sucursal: String = "San Bernardo",
     val errores: ProductoErrores = ProductoErrores()
 )
 
