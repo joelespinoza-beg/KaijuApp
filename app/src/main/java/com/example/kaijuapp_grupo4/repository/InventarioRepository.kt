@@ -1,5 +1,6 @@
 package com.example.kaijuapp_grupo4.repository
 
+import android.util.Log
 import com.example.kaijuapp_grupo4.data.MovimientoDao
 import com.example.kaijuapp_grupo4.data.ProductoDao
 import com.example.kaijuapp_grupo4.data.remote.BackendApiService
@@ -23,9 +24,12 @@ class InventarioRepository(
         productoDao.insertar(producto)
         movimientoDao.insertar(crearMovimiento(producto.id, "ENTRADA", producto.cantidadDisponible))
         try {
-            backendApi.crearProducto(producto)
+            val response = backendApi.crearProducto(producto)
+            if (!response.isSuccessful) {
+                Log.w("InventarioRepository", "Error backend al crear producto: ${response.code()} ${response.errorBody()?.string()}")
+            }
         } catch (e: Exception) {
-            // Ignorar error de red si offline
+            Log.e("InventarioRepository", "Excepción creando producto en backend: ${e.message}", e)
         }
     }
 

@@ -2,6 +2,7 @@ package com.example.kaijuapp_grupo4.viewmodel
 
 import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kaijuapp_grupo4.data.AppDatabase
@@ -90,22 +91,24 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
                 val locales = repository.obtenerTodosLocales()
                 for (producto in locales) {
                     try {
-                        RetrofitClient.backendService.crearProducto(producto)
-                    } catch (_: Exception) {
+                        val response = RetrofitClient.backendService.crearProducto(producto)
+                        if (!response.isSuccessful) {
+                            Log.w("Sync", "Fallo al enviar producto ${producto.nombre}: ${response.code()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Sync", "Excepción enviando producto ${producto.nombre}: ${e.message}", e)
                     }
                 }
 
-                try {
-                    val remotos = RetrofitClient.backendService.obtenerTodosProductos()
-                    for (remoto in remotos) {
-                        repository.insertarLocal(remoto)
-                    }
-                } catch (_: Exception) {
+                val remotos = RetrofitClient.backendService.obtenerTodosProductos()
+                for (remoto in remotos) {
+                    repository.insertarLocal(remoto)
                 }
 
                 _backendOnline.value = true
-                _mensajeSincronizacion.value = "¡Sincronización bidireccional exitosa con el servidor!"
+                _mensajeSincronizacion.value = "¡Sincronización exitosa con servidor (${remotos.size} productos)!"
             } catch (e: Exception) {
+                Log.e("Sync", "Error general de sincronización: ${e.message}", e)
                 _backendOnline.value = false
                 _mensajeSincronizacion.value = "Backend offline: ${e.localizedMessage ?: "Error de red"}"
             }
