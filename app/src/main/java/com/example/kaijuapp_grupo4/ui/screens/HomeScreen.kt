@@ -52,13 +52,15 @@ fun HomeScreen(navController: NavController) {
         Triple(Icons.AutoMirrored.Filled.List, "Inventario de Productos", Screen.Inventario),
         Triple(Icons.Default.Add, "Registrar Producto", Screen.FormularioProducto),
         Triple(Icons.Default.ShoppingCart, "Registrar Venta", Screen.ResumenVenta),
+        Triple(Icons.AutoMirrored.Filled.List, "Inventario Multi-Sucursal (Extra)", Screen.InventarioExtra),
         Triple(Icons.Default.Person, "Perfil de Usuario / Ajustes", Screen.Perfil)
     )
 
     val accionesPrincipales = listOf(
         "Ver Inventario" to Screen.Inventario,
         "Registrar Nuevo Producto" to Screen.FormularioProducto,
-        "Registrar Venta" to Screen.ResumenVenta
+        "Registrar Venta" to Screen.ResumenVenta,
+        "Inventario Multi-Sucursal" to Screen.InventarioExtra
     )
 
     ModalNavigationDrawer(

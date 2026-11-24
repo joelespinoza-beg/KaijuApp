@@ -18,11 +18,15 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -51,6 +55,9 @@ fun PerfilScreen(
 ) {
     val fotoPerfil by perfilViewModel.fotoPerfil.collectAsState()
     val alertasActivas by perfilViewModel.alertasActivas.collectAsState()
+    val sucursalAfiliada by perfilViewModel.sucursalAfiliada.collectAsState()
+    var expandedSucursalPerfil by remember { mutableStateOf(false) }
+    val listaSucursales = listOf("San Bernardo", "Central", "Norte", "Maipú", "Persa BioBío")
     var mostrarMensaje by remember { mutableStateOf(false) }
 
     val selectorImagen = rememberSelectorImagen(prefijoArchivo = "perfil") { uri ->
@@ -111,6 +118,38 @@ fun PerfilScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = expandedSucursalPerfil,
+                onExpandedChange = { expandedSucursalPerfil = !expandedSucursalPerfil }
+            ) {
+                OutlinedTextField(
+                    value = "Sucursal Afiliada: $sucursalAfiliada",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Sucursal de Afiliación") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSucursalPerfil) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expandedSucursalPerfil,
+                    onDismissRequest = { expandedSucursalPerfil = false }
+                ) {
+                    listaSucursales.forEach { sucursal ->
+                        DropdownMenuItem(
+                            text = { Text(sucursal) },
+                            onClick = {
+                                perfilViewModel.guardarSucursalAfiliada(sucursal)
+                                expandedSucursalPerfil = false
+                                mostrarMensaje = true
+                            }
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = {

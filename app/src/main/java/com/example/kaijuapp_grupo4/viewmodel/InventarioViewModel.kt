@@ -10,11 +10,13 @@ import com.example.kaijuapp_grupo4.model.ProductoErrores
 import com.example.kaijuapp_grupo4.model.ProductoFormState
 import com.example.kaijuapp_grupo4.model.VentaUiState
 import com.example.kaijuapp_grupo4.data.remote.RetrofitClient
+import com.example.kaijuapp_grupo4.repository.EstadoDataStore
 import com.example.kaijuapp_grupo4.repository.InventarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -26,8 +28,17 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
         InventarioRepository(db.productoDao(), db.movimientoDao())
     }
 
-    val productos: StateFlow<List<Producto>> = repository.productos
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val estadoDataStore = EstadoDataStore(application)
+
+    val sucursalAfiliada: StateFlow<String> = estadoDataStore.obtenerSucursalAfiliada()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "San Bernardo")
+
+    val productos: StateFlow<List<Producto>> = combine(
+        repository.productos,
+        sucursalAfiliada
+    ) { listaProductos, sucursal ->
+        listaProductos.filter { it.sucursal.equals(sucursal, ignoreCase = true) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _backendOnline = MutableStateFlow(false)
     val backendOnline: StateFlow<Boolean> = _backendOnline.asStateFlow()
@@ -161,7 +172,7 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
             cantidadDisponible = cantidad,
             stockMinimo = stockMinimo,
             imagenUri = estado.imagenUri?.toString(),
-            sucursal = "San Bernardo"
+            sucursal = sucursalAfiliada.value
         )
         viewModelScope.launch { repository.agregarProducto(nuevoProducto) }
         _formState.value = ProductoFormState()

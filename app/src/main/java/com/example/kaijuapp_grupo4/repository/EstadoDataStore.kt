@@ -14,6 +14,7 @@ class EstadoDataStore(private val context: Context) {
 
     private val claveAlertas = booleanPreferencesKey("notificaciones_activadas")
     private val claveFotoPerfil = stringPreferencesKey("foto_perfil")
+    private val claveSucursalAfiliada = stringPreferencesKey("sucursal_afiliada")
 
     suspend fun guardarAlertas(activo: Boolean) {
         context.dataStore.edit { prefs -> prefs[claveAlertas] = activo }
@@ -28,4 +29,11 @@ class EstadoDataStore(private val context: Context) {
 
     fun obtenerFoto(): Flow<String?> =
         context.dataStore.data.map { prefs -> prefs[claveFotoPerfil] }
+
+    suspend fun guardarSucursalAfiliada(sucursal: String) {
+        context.dataStore.edit { prefs -> prefs[claveSucursalAfiliada] = sucursal }
+    }
+
+    fun obtenerSucursalAfiliada(): Flow<String> =
+        context.dataStore.data.map { prefs -> prefs[claveSucursalAfiliada] ?: "San Bernardo" }
 }

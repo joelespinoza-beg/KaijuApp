@@ -62,12 +62,13 @@ fun InventarioScreen(
     val productos by inventarioViewModel.productos.collectAsState()
     val backendOnline by inventarioViewModel.backendOnline.collectAsState()
     val mensajeSincronizacion by inventarioViewModel.mensajeSincronizacion.collectAsState()
+    val sucursalAfiliada by inventarioViewModel.sucursalAfiliada.collectAsState()
     val columnas = if (obtenerWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) 1 else 2
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Inventario Kaiju") },
+                title = { Text("Inventario - Sucursal $sucursalAfiliada") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")

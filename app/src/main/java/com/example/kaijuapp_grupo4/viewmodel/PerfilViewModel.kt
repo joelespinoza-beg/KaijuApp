@@ -18,6 +18,9 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
     val alertasActivas: StateFlow<Boolean> = estadoDataStore.obtenerAlertas()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
+    val sucursalAfiliada: StateFlow<String> = estadoDataStore.obtenerSucursalAfiliada()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "San Bernardo")
+
     val fotoPerfil: StateFlow<Uri?> = estadoDataStore.obtenerFoto()
         .map { ruta -> ruta?.let { Uri.parse(it) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -31,6 +34,12 @@ class PerfilViewModel(application: Application) : AndroidViewModel(application) 
     fun guardarFoto(uri: Uri) {
         viewModelScope.launch {
             estadoDataStore.guardarFoto(uri.toString())
+        }
+    }
+
+    fun guardarSucursalAfiliada(sucursal: String) {
+        viewModelScope.launch {
+            estadoDataStore.guardarSucursalAfiliada(sucursal)
         }
     }
 }
