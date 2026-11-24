@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,7 +40,9 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
         repository.productos,
         sucursalAfiliada
     ) { listaProductos, sucursal ->
-        listaProductos.filter { it.sucursal.equals(sucursal, ignoreCase = true) }
+        listaProductos
+            .filter { it.sucursal.equals(sucursal, ignoreCase = true) }
+            .distinctBy { it.nombre.lowercase().trim() }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _backendOnline = MutableStateFlow(false)
@@ -49,6 +52,9 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
     val mensajeSincronizacion: StateFlow<String?> = _mensajeSincronizacion.asStateFlow()
 
     val todosLosProductos: StateFlow<List<Producto>> = repository.productos
+        .map { lista ->
+            lista.distinctBy { it.nombre.lowercase().trim() + "|" + it.sucursal.lowercase().trim() }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val tiemposDefecto = mapOf(
