@@ -13,6 +13,9 @@ interface ProductoDao {
     @Query("SELECT * FROM productos ORDER BY nombre ASC")
     fun observarTodos(): Flow<List<Producto>>
 
+    @Query("SELECT * FROM productos")
+    suspend fun obtenerTodosDirecto(): List<Producto>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(producto: Producto)
 

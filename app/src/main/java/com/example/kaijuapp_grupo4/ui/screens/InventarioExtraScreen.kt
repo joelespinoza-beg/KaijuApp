@@ -68,6 +68,7 @@ fun InventarioExtraScreen(
 ) {
     val productosLocales by inventarioViewModel.productos.collectAsState()
     val backendOnline by inventarioViewModel.backendOnline.collectAsState()
+    val tiemposSucursales by inventarioViewModel.tiemposSucursales.collectAsState()
 
     var sucursales by remember {
         mutableStateOf(
@@ -148,17 +149,18 @@ fun InventarioExtraScreen(
         )
     }
 
-    val sucursalesActualizadas = remember(sucursales, productosLocales) {
+    val sucursalesActualizadas = remember(sucursales, productosLocales, tiemposSucursales) {
         sucursales.map { suc ->
+            val tiempoActualizado = tiemposSucursales[suc.id] ?: suc.tiempoTranscurridoFormateado
             if (suc.id == "san_bernardo") {
                 val base = listOf(
                     Producto("sb-1", "Polera Kaiju Godzilla", "Ropa", 15990.0, 15, 5, sucursal = "San Bernardo"),
                     Producto("sb-2", "Figura Ghidorah Articulada", "Coleccionables", 34990.0, 4, 2, sucursal = "San Bernardo"),
                     Producto("sb-3", "Manga Kaiju No. 8 Vol. 1", "Libros", 8990.0, 20, 5, sucursal = "San Bernardo")
                 )
-                suc.copy(productos = base + productosLocales)
+                suc.copy(productos = base + productosLocales, tiempoTranscurridoFormateado = tiempoActualizado)
             } else {
-                suc
+                suc.copy(tiempoTranscurridoFormateado = tiempoActualizado)
             }
         }
     }
@@ -317,14 +319,7 @@ fun InventarioExtraScreen(
                         Button(
                             onClick = {
                                 inventarioViewModel.sincronizarConBackend()
-                                sucursales = sucursales.mapIndexed { idx, suc ->
-                                    if (idx == selectedTabIndex) {
-                                        suc.copy(
-                                            diasSinCambios = 0,
-                                            tiempoTranscurridoFormateado = "Hace 1 minuto"
-                                        )
-                                    } else suc
-                                }
+                                inventarioViewModel.actualizarTiempoSucursal(sucursalActual.id, "Hace 1 minuto")
                                 mensajeSincronizacion = true
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = VerdeAzulado),

@@ -2,6 +2,8 @@ package com.example.kaijuapp_grupo4.repository
 
 import com.example.kaijuapp_grupo4.data.MovimientoDao
 import com.example.kaijuapp_grupo4.data.ProductoDao
+import com.example.kaijuapp_grupo4.data.remote.BackendApiService
+import com.example.kaijuapp_grupo4.data.remote.RetrofitClient
 import com.example.kaijuapp_grupo4.model.Movimiento
 import com.example.kaijuapp_grupo4.model.Producto
 import kotlinx.coroutines.flow.Flow
@@ -12,13 +14,27 @@ import java.util.UUID
 
 class InventarioRepository(
     private val productoDao: ProductoDao,
-    private val movimientoDao: MovimientoDao
+    private val movimientoDao: MovimientoDao,
+    private val backendApi: BackendApiService = RetrofitClient.backendService
 ) {
     val productos: Flow<List<Producto>> = productoDao.observarTodos()
 
     suspend fun agregarProducto(producto: Producto) {
         productoDao.insertar(producto)
         movimientoDao.insertar(crearMovimiento(producto.id, "ENTRADA", producto.cantidadDisponible))
+        try {
+            backendApi.crearProducto(producto)
+        } catch (e: Exception) {
+            // Ignorar error de red si offline
+        }
+    }
+
+    suspend fun insertarLocal(producto: Producto) {
+        productoDao.insertar(producto)
+    }
+
+    suspend fun obtenerTodosLocales(): List<Producto> {
+        return productoDao.obtenerTodosDirecto()
     }
 
     suspend fun registrarVenta(productoId: String, cantidad: Int): Boolean {
