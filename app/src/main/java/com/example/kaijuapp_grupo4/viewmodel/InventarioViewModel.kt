@@ -1,7 +1,9 @@
 package com.example.kaijuapp_grupo4.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -126,6 +128,41 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
     private val _formState = MutableStateFlow(ProductoFormState())
     val formState: StateFlow<ProductoFormState> = _formState.asStateFlow()
 
+    fun eliminarProducto(id: String) {
+        viewModelScope.launch {
+            repository.eliminarProducto(id)
+        }
+    }
+
+    fun actualizarProducto(producto: Producto) {
+        viewModelScope.launch {
+            repository.actualizarProducto(producto)
+        }
+    }
+
+    private fun uriToBase64(context: Context, uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+            if (bytes != null) {
+                val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                "data:image/jpeg;base64,$base64"
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun onImagenChange(uri: Uri?) {
+        if (uri != null) {
+            val base64Str = uriToBase64(getApplication(), uri) ?: uri.toString()
+            _formState.update { it.copy(imagenUri = base64Str) }
+        } else {
+            _formState.update { it.copy(imagenUri = null) }
+        }
+    }
+
     fun onNombreChange(valor: String) {
         _formState.update {
             it.copy(
@@ -164,10 +201,6 @@ class InventarioViewModel(application: Application) : AndroidViewModel(applicati
                 errores = it.errores.copy(stockMinimo = null)
             )
         }
-    }
-
-    fun onImagenChange(uri: Uri?) {
-        _formState.update { it.copy(imagenUri = uri) }
     }
 
     fun limpiarFormulario() {

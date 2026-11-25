@@ -48,6 +48,24 @@ class InventarioRepository(
         return true
     }
 
+    suspend fun eliminarProducto(id: String) {
+        productoDao.eliminarPorId(id)
+        try {
+            backendApi.eliminarProducto(id)
+        } catch (e: Exception) {
+            Log.e("InventarioRepository", "Error eliminando en backend: ${e.message}", e)
+        }
+    }
+
+    suspend fun actualizarProducto(producto: Producto) {
+        productoDao.insertar(producto)
+        try {
+            backendApi.actualizarProducto(producto.id, producto)
+        } catch (e: Exception) {
+            Log.e("InventarioRepository", "Error actualizando en backend: ${e.message}", e)
+        }
+    }
+
     private fun crearMovimiento(productoId: String, tipo: String, cantidad: Int): Movimiento {
         val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.forLanguageTag("es-CL")).format(Date())
         return Movimiento(

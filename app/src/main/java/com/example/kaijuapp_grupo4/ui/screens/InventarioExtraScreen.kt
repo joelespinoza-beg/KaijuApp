@@ -18,12 +18,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,6 +72,19 @@ fun InventarioExtraScreen(
     val todosLosProductos by inventarioViewModel.todosLosProductos.collectAsState()
     val backendOnline by inventarioViewModel.backendOnline.collectAsState()
     val tiemposSucursales by inventarioViewModel.tiemposSucursales.collectAsState()
+
+    var productoEditando by remember { mutableStateOf<Producto?>(null) }
+
+    if (productoEditando != null) {
+        DialogoEditarProducto(
+            producto = productoEditando!!,
+            onDismiss = { productoEditando = null },
+            onGuardar = { actualizado ->
+                inventarioViewModel.actualizarProducto(actualizado)
+                productoEditando = null
+            }
+        )
+    }
 
     val sucursalesActualizadas = remember(todosLosProductos, tiemposSucursales) {
         listOf(
@@ -356,7 +372,7 @@ fun InventarioExtraScreen(
                 }
 
                 Text(
-                    text = "Inventario de ${sucursalActual.nombre} (${productosFiltrados.size} products):",
+                    text = "Inventario de ${sucursalActual.nombre} (${productosFiltrados.size} productos):",
                     style = MaterialTheme.typography.titleSmall
                 )
 
@@ -365,7 +381,11 @@ fun InventarioExtraScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(productosFiltrados, key = { it.id }) { producto ->
-                        ItemProductoExtraCard(producto = producto)
+                        ItemProductoExtraCard(
+                            producto = producto,
+                            onEditar = { productoEditando = producto },
+                            onEliminar = { inventarioViewModel.eliminarProducto(producto.id) }
+                        )
                     }
                 }
             }
@@ -391,7 +411,13 @@ private fun InsigniaCambio(texto: String, colorFondo: Color, colorTexto: Color) 
 }
 
 @Composable
-private fun ItemProductoExtraCard(producto: Producto) {
+private fun ItemProductoExtraCard(
+    producto: Producto,
+    onEditar: () -> Unit,
+    onEliminar: () -> Unit
+) {
+    var expandedMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -403,7 +429,7 @@ private fun ItemProductoExtraCard(producto: Producto) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = producto.nombre,
                     style = MaterialTheme.typography.bodyLarge,
@@ -414,13 +440,38 @@ private fun ItemProductoExtraCard(producto: Producto) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    text = "${producto.cantidadDisponible} unidades",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
-            Text(
-                text = "${producto.cantidadDisponible} unidades",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+
+            Box {
+                IconButton(onClick = { expandedMenu = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Opciones")
+                }
+                DropdownMenu(
+                    expanded = expandedMenu,
+                    onDismissRequest = { expandedMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Editar") },
+                        onClick = {
+                            expandedMenu = false
+                            onEditar()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Eliminar") },
+                        onClick = {
+                            expandedMenu = false
+                            onEliminar()
+                        }
+                    )
+                }
+            }
         }
     }
 }

@@ -19,6 +19,9 @@ interface ProductoDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(producto: Producto)
 
+    @Query("DELETE FROM productos WHERE id = :id")
+    suspend fun eliminarPorId(id: String)
+
     // Devuelve cuantas filas modifico: 1 = venta realizada, 0 = stock insuficiente o producto inexistente
     @Query(
         "UPDATE productos SET cantidadDisponible = cantidadDisponible - :cantidad " +
