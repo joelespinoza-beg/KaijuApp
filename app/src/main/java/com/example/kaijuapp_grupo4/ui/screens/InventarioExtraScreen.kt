@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -94,28 +93,21 @@ fun InventarioExtraScreen(
                 direccion = "Av. América 450, San Bernardo",
                 diasSinCambios = 0,
                 tiempoTranscurridoFormateado = tiemposSucursales["san_bernardo"] ?: "Hace 15 minutos",
-                cambioLlegados = 3 + todosLosProductos.filter { it.sucursal.equals("San Bernardo", ignoreCase = true) || it.sucursal.equals("san_bernardo", ignoreCase = true) }.size,
-                cambioVendidos = 5,
-                cambioMerma = 1,
-                productos = listOf(
-                    Producto("sb-1", "Polera Kaiju Godzilla", "Ropa", 15990.0, 15, 5, sucursal = "San Bernardo"),
-                    Producto("sb-2", "Figura Ghidorah Articulada", "Coleccionables", 34990.0, 4, 2, sucursal = "San Bernardo"),
-                    Producto("sb-3", "Manga Kaiju No. 8 Vol. 1", "Libros", 8990.0, 20, 5, sucursal = "San Bernardo")
-                ) + todosLosProductos.filter { it.sucursal.equals("San Bernardo", ignoreCase = true) || it.sucursal.equals("san_bernardo", ignoreCase = true) }
+                cambioLlegados = todosLosProductos.filter { it.sucursal.equals("San Bernardo", ignoreCase = true) || it.sucursal.equals("san_bernardo", ignoreCase = true) }.size,
+                cambioVendidos = 0,
+                cambioMerma = 0,
+                productos = todosLosProductos.filter { it.sucursal.equals("San Bernardo", ignoreCase = true) || it.sucursal.equals("san_bernardo", ignoreCase = true) }
             ),
             Sucursal(
                 id = "central",
                 nombre = "Central",
                 direccion = "Av. Libertador B. O'Higgins 1200, Santiago",
-                diasSinCambios = 1,
+                diasSinCambios = 0,
                 tiempoTranscurridoFormateado = tiemposSucursales["central"] ?: "Hace 1 hora",
-                cambioLlegados = 10 + todosLosProductos.filter { it.sucursal.equals("Central", ignoreCase = true) || it.sucursal.equals("central", ignoreCase = true) }.size,
-                cambioVendidos = 12,
+                cambioLlegados = todosLosProductos.filter { it.sucursal.equals("Central", ignoreCase = true) || it.sucursal.equals("central", ignoreCase = true) }.size,
+                cambioVendidos = 0,
                 cambioMerma = 0,
-                productos = listOf(
-                    Producto("ct-1", "Polera Kaiju Classic", "Ropa", 15990.0, 25, 5, sucursal = "Central"),
-                    Producto("ct-2", "Figura Godzilla 15cm", "Coleccionables", 29990.0, 8, 5, sucursal = "Central")
-                ) + todosLosProductos.filter { it.sucursal.equals("Central", ignoreCase = true) || it.sucursal.equals("central", ignoreCase = true) }
+                productos = todosLosProductos.filter { it.sucursal.equals("Central", ignoreCase = true) || it.sucursal.equals("central", ignoreCase = true) }
             ),
             Sucursal(
                 id = "norte",
@@ -123,42 +115,32 @@ fun InventarioExtraScreen(
                 direccion = "Av. Independencia 3400, Conchalí",
                 diasSinCambios = 0,
                 tiempoTranscurridoFormateado = tiemposSucursales["norte"] ?: "Hace 45 minutos",
-                cambioLlegados = 5 + todosLosProductos.filter { it.sucursal.equals("Norte", ignoreCase = true) || it.sucursal.equals("norte", ignoreCase = true) }.size,
-                cambioVendidos = 3,
+                cambioLlegados = todosLosProductos.filter { it.sucursal.equals("Norte", ignoreCase = true) || it.sucursal.equals("norte", ignoreCase = true) }.size,
+                cambioVendidos = 0,
                 cambioMerma = 0,
-                productos = listOf(
-                    Producto("nt-1", "Taza Logo Kaiju", "Accesorios", 7990.0, 18, 5, sucursal = "Norte")
-                ) + todosLosProductos.filter { it.sucursal.equals("Norte", ignoreCase = true) || it.sucursal.equals("norte", ignoreCase = true) }
+                productos = todosLosProductos.filter { it.sucursal.equals("Norte", ignoreCase = true) || it.sucursal.equals("norte", ignoreCase = true) }
             ),
             Sucursal(
                 id = "maipu",
                 nombre = "Maipú",
                 direccion = "Av. Pajaritos 2100, Maipú",
-                diasSinCambios = 2,
+                diasSinCambios = 0,
                 tiempoTranscurridoFormateado = tiemposSucursales["maipu"] ?: "Hace 2 días",
-                cambioLlegados = 0 + todosLosProductos.filter { it.sucursal.equals("Maipú", ignoreCase = true) || it.sucursal.equals("maipu", ignoreCase = true) }.size,
-                cambioVendidos = 8,
+                cambioLlegados = todosLosProductos.filter { it.sucursal.equals("Maipú", ignoreCase = true) || it.sucursal.equals("maipu", ignoreCase = true) }.size,
+                cambioVendidos = 0,
                 cambioMerma = 0,
-                productos = listOf(
-                    Producto("mp-1", "Taza Logo Kaiju Edición Limitada", "Accesorios", 7990.0, 12, 4, sucursal = "Maipú"),
-                    Producto("mp-2", "Figura Mechagodzilla 20cm", "Coleccionables", 39990.0, 2, 3, sucursal = "Maipú"),
-                    Producto("mp-3", "Polera Mothra Vintage", "Ropa", 16990.0, 8, 3, sucursal = "Maipú")
-                ) + todosLosProductos.filter { it.sucursal.equals("Maipú", ignoreCase = true) || it.sucursal.equals("maipu", ignoreCase = true) }
+                productos = todosLosProductos.filter { it.sucursal.equals("Maipú", ignoreCase = true) || it.sucursal.equals("maipu", ignoreCase = true) }
             ),
             Sucursal(
                 id = "persa_biobio",
                 nombre = "Persa BioBío",
                 direccion = "Placer 650, Franklin / BioBío",
-                diasSinCambios = 35,
+                diasSinCambios = 0,
                 tiempoTranscurridoFormateado = tiemposSucursales["persa_biobio"] ?: "Hace 35 días",
-                cambioLlegados = 0 + todosLosProductos.filter { it.sucursal.equals("Persa BioBío", ignoreCase = true) || it.sucursal.equals("persa_biobio", ignoreCase = true) }.size,
+                cambioLlegados = todosLosProductos.filter { it.sucursal.equals("Persa BioBío", ignoreCase = true) || it.sucursal.equals("persa_biobio", ignoreCase = true) }.size,
                 cambioVendidos = 0,
-                cambioMerma = 2,
-                productos = listOf(
-                    Producto("bb-1", "Poster Kaiju Retro 60s", "Decoración", 4990.0, 25, 5, sucursal = "Persa BioBío"),
-                    Producto("bb-2", "Llavero Rodan Metálico", "Accesorios", 3990.0, 30, 10, sucursal = "Persa BioBío"),
-                    Producto("bb-3", "Figura Godzilla Shin 18cm", "Coleccionables", 28990.0, 5, 2, sucursal = "Persa BioBío")
-                ) + todosLosProductos.filter { it.sucursal.equals("Persa BioBío", ignoreCase = true) || it.sucursal.equals("persa_biobio", ignoreCase = true) }
+                cambioMerma = 0,
+                productos = todosLosProductos.filter { it.sucursal.equals("Persa BioBío", ignoreCase = true) || it.sucursal.equals("persa_biobio", ignoreCase = true) }
             )
         )
     }
@@ -263,22 +245,6 @@ fun InventarioExtraScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-
-                            if (!sucursalActual.estaDisponible) {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(RojoSuaveTexto.copy(alpha = 0.15f))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "No disponible",
-                                        color = RojoSuaveTexto,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -347,29 +313,6 @@ fun InventarioExtraScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                if (!sucursalActual.estaDisponible) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(RojoSuaveFondo)
-                            .padding(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = RojoSuaveTexto
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = "Sucursal sin movimientos > 31 días. Su inventario completo permanece totalmente visible a continuación.",
-                            color = RojoSuaveTexto,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
 
                 Text(
                     text = "Inventario de ${sucursalActual.nombre} (${productosFiltrados.size} productos):",
